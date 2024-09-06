@@ -1,0 +1,63 @@
+version: '3.8'
+services:
+  banco:
+    env_file:
+      - ./.env
+    container_name: loja-banco
+    hostname: loja-banco
+    ports:
+      - ${POSTGREE_PORTA}:${POSTEGREE_PORTA}
+    build:
+      context: ./banco
+      dockerfile: Dockerfile
+    volumes:
+      - ./banco/dump.sql:/docker-entrypoint-initdb.d/dump.sql
+    restart: unless-stopped
+    networks:
+      - loja
+
+  api:
+    image: golang:latest
+    hostname: loja-api
+    container_name: loja-api
+    ports:
+      - ${API_PORTA}:${API_PORTA}
+    working_dir: /api
+    build: .
+    volumes:
+      - ./api:/api
+    networks:
+      - loja
+    tty: true
+
+  arquivos:
+    image: NGINX
+    hostname: loja-arquivos
+    volumes:
+      - ./arquivos:/arquivos
+    networks:
+      - loja
+    tty: true
+
+
+  pagamento:
+    image: NODE
+    hostname: loja-pagamentos
+    volumes:
+      - ./pagamentos:/pagamentos
+    networks:
+      - loja
+    tty: true
+
+  frontend:
+    image: NODE
+    hostname: loja-frontend
+    volumes:
+      - ./frontend:/app
+    networks:
+      - loja
+    tty: true
+
+networks:
+  loja:
+    driver: bridge
