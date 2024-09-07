@@ -13,6 +13,8 @@ RUN go build -o /app/loja-api
 FROM nginx:alpine
 
 RUN apk add --no-cache go
+RUN apk add vim
+RUN apk add logrotate
 
 WORKDIR /usr/share/nginx/html
 
