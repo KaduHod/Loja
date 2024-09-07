@@ -17,21 +17,18 @@ services:
       - loja
 
   api:
-    image: golang:latest
-    hostname: loja-api
-    container_name: loja-api
-    ports:
-      - ${API_PORTA}:${API_PORTA}
-    working_dir: /api
-    build: .
-    volumes:
-      - ./api:/api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
     networks:
       - loja
     tty: true
 
   arquivos:
     image: NGINX
+    ports:
+      - 80:80
+      - 442:442
     hostname: loja-arquivos
     volumes:
       - ./arquivos:/arquivos
@@ -43,6 +40,8 @@ services:
   pagamento:
     image: NODE
     hostname: loja-pagamentos
+    ports:
+      - ${PAGAMENTOS_PORTA}:${PAGAMENTOS_PORTA}
     volumes:
       - ./pagamentos:/pagamentos
     networks:
