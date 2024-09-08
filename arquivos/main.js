@@ -10,6 +10,7 @@ const main = async () => {
     const server = express()
     server.use(express.json())
     server.get('/ping', (req, res) => {
+        console.log("recebi o ping")
         res.send("pong")
     })
     server.listen(env.API_PORTA, () => console.log("File service running on " + env.API_PORTA))
