@@ -1,61 +1,81 @@
-version: '3.8'
 services:
   banco:
-    env_file:
-      - ./.env
     container_name: loja-banco
     hostname: loja-banco
+    env_file:
+      - ./.env
     ports:
-      - ${POSTGREE_PORTA}:${POSTEGREE_PORTA}
+      - ${POSTGREE_PORTA}:5432
     build:
       context: ./banco
       dockerfile: Dockerfile
     volumes:
-      - ./banco/dump.sql:/docker-entrypoint-initdb.d/dump.sql
+      - ./banco/dumps/dump.sql:/docker-entrypoint-initdb.d/dump.sql
     restart: unless-stopped
     networks:
       - loja
 
   api:
+    container_name: loja-api
+    hostname: loja-api
     build:
       context: ./api
       dockerfile: Dockerfile
+    volumes:
+      - ./api:/app
+    ports:
+      - ${API_PORTA}:80
     networks:
       - loja
     tty: true
 
   arquivos:
-    image: NGINX
-    ports:
-      - 80:80
-      - 442:442
+    container_name: loja-arquivos
     hostname: loja-arquivos
-    volumes:
-      - ./arquivos:/arquivos
-    networks:
-      - loja
-    tty: true
-
-
-  pagamento:
-    image: NODE
-    hostname: loja-pagamentos
+    build:
+      context: ./arquivos
+      dockerfile: Dockerfile
     ports:
-      - ${PAGAMENTOS_PORTA}:${PAGAMENTOS_PORTA}
+      - ${ARQUIVOS_PORTA}:80
     volumes:
-      - ./pagamentos:/pagamentos
+      - ./arquivos:/app
     networks:
       - loja
     tty: true
 
-  frontend:
-    image: NODE
-    hostname: loja-frontend
+  auth:
+    container_name: loja-auth
+    hostname: loja-auth
+    build:
+      context: ./auth
+      dockerfile: Dockerfile
+    ports:
+      - 5551:80
     volumes:
-      - ./frontend:/app
+      - ./auth:/app
     networks:
       - loja
     tty: true
+#
+#  pagamento:
+#    image: NODE
+#    hostname: loja-pagamentos
+#    ports:
+#      - ${PAGAMENTOS_PORTA}:${PAGAMENTOS_PORTA}
+#    volumes:
+#      - ./pagamentos:/pagamentos
+#    networks:
+#      - loja
+#    tty: true
+#
+#  frontend:
+#    image: NODE
+#    hostname: loja-frontend
+#    volumes:
+#      - ./frontend:/app
+#    networks:
+#      - loja
+#    tty: true
 
 networks:
   loja:
