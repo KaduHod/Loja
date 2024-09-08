@@ -1,5 +1,5 @@
 # Usar a imagem oficial do PostgreSQL
-FROM postgres:15
+FROM postgres:latest
 
 # Definir variáveis de ambiente para o usuário, senha e nome do banco de dados
 ENV POSTGRES_USER=root
