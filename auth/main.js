@@ -19,6 +19,7 @@ const checkService = ({service, secret}) => {
 }
 const main = async () => {
     const server = express()
+    console.log("Atualizando")
     const JWT_SECRET = env.JWT_SECRET;
     server.use(express.json())
     server.get('/ping', (req, res) => {

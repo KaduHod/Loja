@@ -25,4 +25,4 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 
-CMD ["/bin/sh", "-c", "loja-api & nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "loja-api > server.log 2>&1 & nginx -g 'daemon off;'"]

@@ -50,7 +50,7 @@ services:
       context: ./auth
       dockerfile: Dockerfile
     ports:
-      - 5551:80
+      - ${AUTH_PORTA}:80
     volumes:
       - ./auth:/app
     networks:

@@ -9,10 +9,24 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
+var client *http.Client
+var once sync.Once
 
+// GetClient returns the singleton instance of http.Client
+func GetClient() *http.Client {
+    once.Do(func() {
+        client = &http.Client{
+            // Configure your client here if needed, e.g., timeouts
+            Timeout: time.Second * 10,
+        }
+    })
+    return client
+}
 func RequestBody[T any](bodyDest * T, c *gin.Context) bool  {
 	if err := c.BindJSON(bodyDest); err != nil {
 		log.Println("Erro :: pegando body do request")
@@ -79,7 +93,7 @@ func Request(config RequestConfigInput) (string, int, error) {
 	}
 
 	// Fazer a requisição
-	client := &http.Client{}
+	client := GetClient()
 	resp, err := client.Do(req)
 	if err != nil {
 		fmt.Println("Error sending request:", err)
@@ -94,7 +108,5 @@ func Request(config RequestConfigInput) (string, int, error) {
 		return  body_, code, err
 	}
 
-	fmt.Println("Response Status:", resp.Status)
-	fmt.Println("Response Body:", string(bodyBytes))
     return string(bodyBytes), resp.StatusCode, nil
 }
