@@ -12,6 +12,6 @@ const main = async () => {
     server.get('/ping', (req, res) => {
         res.send("ping-pong")
     })
-    server.listen(env.API_PORTA, () => console.log("File service running on " + env.API_PORTA))
+    server.listen(env.API_PORTA, () => console.log("Auth service running on " + env.API_PORTA))
 }
 main();
