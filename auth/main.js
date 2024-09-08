@@ -13,7 +13,6 @@ const services = {
 }
 const checkService = ({service, secret}) => {
     const serviceIsValid = !!services[service]
-    console.log({services, service, secret})
     if(!serviceIsValid) return false
     if(services[service].secret !== secret) return false;
     return true;
@@ -36,7 +35,7 @@ const main = async () => {
 
             return res.json({ token });
         } else {
-            return res.status(401).json({ message: 'Invalid services!' });
+            return res.status(400).json({ message: 'Invalid services!' });
         }
     })
     server.post('/verify-token', (req, res) => {
@@ -47,9 +46,10 @@ const main = async () => {
 
         try {
             // Verifica e decodifica o token JWT
-            jwt.verify(token, JWT_SECRET);
+            const decoded = jwt.verify(token, JWT_SECRET);
             return res.json({ valid: true, decoded });
         } catch (err) {
+            //console.log('INVALIDO', {token})
             return res.status(401).json({ valid: false, message: 'Invalid or expired token' });
         }
     })
