@@ -8,6 +8,5 @@ ENV POSTGRES_DB=loja
 
 EXPOSE 5432
 
-
 CMD ["postgres"]
 
