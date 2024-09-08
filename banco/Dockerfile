@@ -5,7 +5,7 @@ FROM postgres:latest
 ENV POSTGRES_USER=root
 ENV POSTGRES_PASSWORD=root
 ENV POSTGRES_DB=loja
-
+COPY ./dumps/dump.sql /dump.sql
 EXPOSE 5432
 
 CMD ["postgres"]
