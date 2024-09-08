@@ -17,4 +17,4 @@ COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 80
 
-CMD ["/bin/sh", "-c", "npm run dev /app/main.js & nginx -g 'daemon off;'"]
+CMD ["/bin/sh", "-c", "npm run dev > server.log 2>&1 & nginx -g 'daemon off;'"]
