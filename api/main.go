@@ -1,11 +1,22 @@
 package main
 
 import (
+	"api-loja/src/infra/database"
 	"api-loja/src/utils"
+	"database/sql"
 	"encoding/json"
+	"log"
 
 	"github.com/gin-gonic/gin"
+	"github.com/joho/godotenv"
 )
+func GetBd() *sql.DB {
+    con, err := database.NewConnection()
+    if err != nil {
+        log.Fatal()
+    }
+    return con
+}
 func AuthMiddleware() gin.HandlerFunc {
     return func(c *gin.Context) {
         token := c.GetHeader("token")
@@ -37,6 +48,10 @@ func AuthMiddleware() gin.HandlerFunc {
     }
 }
 func main() {
+    err := godotenv.Load()
+    if err != nil {
+        log.Fatal("Error loanding .env file")
+    }
     server := gin.Default()
     server.Use(AuthMiddleware())
     server.GET("/ping", func(c *gin.Context) {

@@ -3,6 +3,7 @@ package main
 import (
 	"api-loja/src/utils"
 	"encoding/json"
+	"fmt"
 	"testing"
 )
 
@@ -67,6 +68,7 @@ func TestAuthWithValidToken(t *testing.T) {
         t.Logf("Erro não é igual a nil 2")
     }
     if code > 299 {
+        fmt.Println(res, code, err)
         t.Logf("status de ping é mairo que 200 1")
     }
 }
