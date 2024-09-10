@@ -2,12 +2,13 @@ package database
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"log"
 	"os"
 
 	"github.com/joho/godotenv"
-    _ "github.com/lib/pq"
+	_ "github.com/lib/pq"
 )
 
 func NewConnection() (*sql.DB, error) {
@@ -23,6 +24,38 @@ func NewConnection() (*sql.DB, error) {
     }
     err = database.Ping()
     return database, err
+}
+
+func Delete(table string, targetId int, db *sql.DB) error {
+    query := fmt.Sprintf("DELETE FROM %s WHERE id IN (SELECT id FROM person WHERE id = %d LIMIT 1)", table, targetId)
+    tx, err := db.Begin()
+    if err != nil {
+        return err
+    }
+    res, err := tx.Exec(query)
+    if err != nil {
+        if err := tx.Rollback(); err != nil {
+            return err
+        }
+        return err
+    }
+    countRows, err := res.RowsAffected()
+    if err != nil {
+        if err := tx.Rollback(); err != nil {
+            return err
+        }
+        return err
+    }
+    if countRows > 1 {
+        if err := tx.Rollback(); err != nil {
+            return err
+        }
+        return errors.New("Delete count bigger than one")
+    }
+    if err := tx.Commit(); err != nil {
+        return err
+    }
+    return nil
 }
 
 func Exists(table string, targetId int, db *sql.DB) (bool, error) {

@@ -15,6 +15,7 @@ var db *sql.DB
 func TestMain(m *testing.M) {
     var err error
     db, err = NewConnection()
+    defer db.Close()
     if err != nil {
         os.Exit(1)
     }
@@ -24,7 +25,6 @@ func TestMain(m *testing.M) {
 
     // Fazer "cleanup" (opcional)
     fmt.Println("Finalizando os testes")
-
     // Sair com o código de saída dos testes
     os.Exit(exitCode)
 }
@@ -46,7 +46,6 @@ func TestConnection(t *testing.T) {
         result = append(result, row)
     }
 }
-/*
 func TestExists(t *testing.T) {
     exists, err := Exists("purchase_status", 1, db)
     if err != nil {
@@ -58,7 +57,6 @@ func TestExists(t *testing.T) {
         t.Fail()
     }
 }
-*/
 func TestRegisterThatShouldNotExists(t *testing.T) {
     exists, err := Exists("purchase_status", 9999, db)
     if err != nil {
@@ -68,6 +66,28 @@ func TestRegisterThatShouldNotExists(t *testing.T) {
     }
     if exists {
         t.Log("Find register that should not exists")
+        t.Fail()
+    }
+}
+func TestDelete(t *testing.T) {
+    query := "INSERT INTO person (name, email) VALUES ('TESTE_DELETE', 'TESTE_DELETE@mail.com')"
+    _, err := db.Exec(query)
+    if err != nil {
+        t.Log("Err while trying to insert value to delete")
+        t.Fail()
+    }
+    row := db.QueryRow("SELECT id FROM person WHERE email = 'TESTE_DELETE@mail.com'")
+    if row.Err() != nil {
+        t.Log("Err while trying to fetch value to delete")
+        t.Fail()
+    }
+    var id int
+    if err := row.Scan(&id); err != nil {
+        t.Log("Err while trying to scan value to delete")
+        t.Fail()
+    }
+    if err := Delete("person", id, db); err != nil {
+        t.Log("Err while trying to delete value")
         t.Fail()
     }
 }
