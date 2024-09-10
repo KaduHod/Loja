@@ -1,9 +1,11 @@
 package business
 
 import (
+	"api-loja/src/utils"
 	"database/sql"
 	"errors"
 	"fmt"
+	"net/mail"
 )
 
 type Person struct {
@@ -36,6 +38,10 @@ func CreateBusinessOwner(person BusinessOwner, db *sql.DB) (BusinessOwner, error
     if err != nil {
         return owner, err
     }
+    _, err = mail.ParseAddress(person.Email)
+    if err != nil {
+        return owner, errors.New("Email invalid")
+    }
     insertQuery := fmt.Sprintf("INSERT INTO person (name, email) VALUES ('%s', '%s')", person.Name, person.Email)
     _, err = tx.Exec(insertQuery)
     if err != nil {
@@ -61,4 +67,47 @@ func CreateBusinessOwner(person BusinessOwner, db *sql.DB) (BusinessOwner, error
     owner.Name = personCreated.Name
     owner.Email = personCreated.Email
     return owner, nil
+}
+type Business struct {
+    Id int `json:"id"`
+    Name string `json:"name"`
+    Cnpj string `json:"cnpj"`
+}
+func GetBusinessByCnpj(cnpj string, db *sql.DB) (Business, error) {
+    var business Business
+    query := fmt.Sprintf("SELECT id, name, cnpj FROM businesses WHERE cnpj = '%s' LIMIT 1", cnpj)
+    row := db.QueryRow(query)
+    if row.Err() != nil {
+        return business, row.Err()
+    }
+    if err := row.Scan(&business.Id, &business.Name, &business.Cnpj); err != nil {
+        return business, err
+    }
+    return business, nil
+}
+func CreateBusiness(business Business, db *sql.DB) (Business, error) {
+    business.Cnpj = utils.OnlyNumbers(business.Cnpj)
+    if len(business.Cnpj) < 14 {
+        return business, errors.New("Cnpj invalid")
+    }
+    insertQuery := fmt.Sprintf("INSERT INTO businesses (name, cnpj) VALUES ('%s', '%s')", business.Name, business.Cnpj)
+    tx, err := db.Begin()
+    if err != nil {
+        return business, err
+    }
+    _, err = tx.Exec(insertQuery)
+    if err != nil {
+        if err := tx.Rollback(); err != nil {
+            return business, err
+        }
+        return business, err
+    }
+    if err := tx.Commit(); err != nil {
+        return business, err
+    }
+    business, err = GetBusinessByCnpj(business.Cnpj, db)
+    if err != nil {
+        return business, err
+    }
+    return business, nil
 }

@@ -9,6 +9,7 @@ import (
 )
 var db *sql.DB
 var emailsToDelete []string
+var businessIdsToDelete []int
 func TestMain(m *testing.M) {
     var err error
     db, err = database.NewConnection()
@@ -43,6 +44,26 @@ func TestCreateBusinessOwner(t *testing.T) {
     }
     emailsToDelete = append(emailsToDelete, "teste@mail.com")
 }
+func TestGetBusiness(t *testing.T) {
+    _, err := GetBusinessByCnpj("12345678912345", db)
+    if err != nil {
+        fmt.Println(err)
+        t.Log("Failed to get business")
+        t.Fail()
+    }
+}
+func TestCreateBusiness(t *testing.T) {
+    business, err := CreateBusiness(Business{
+        Name: "TESTE_CREATE_BUSINESS",
+        Cnpj: "12345678912346",
+    }, db)
+    if err != nil {
+        fmt.Println(err)
+        t.Log("Err trying to create business")
+        t.Fail()
+    }
+    businessIdsToDelete = append(businessIdsToDelete, business.Id)
+}
 func postTests() {
     for _, email := range emailsToDelete {
         person, err := GetPersonByEmail(email, db)
@@ -54,6 +75,13 @@ func postTests() {
         if err := database.Delete("person", person.Id, db); err != nil {
             fmt.Println(err)
             fmt.Println("Err trying to DELETE email", email)
+            os.Exit(1)
+        }
+    }
+    for _, id := range businessIdsToDelete {
+        if err := database.Delete("businesses", id, db); err != nil {
+            fmt.Println(err)
+            fmt.Println("Err trying to DELETE business", id)
             os.Exit(1)
         }
     }
