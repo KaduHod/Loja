@@ -17,6 +17,7 @@ func TestMain(m *testing.M) {
     db, err = NewConnection()
     defer db.Close()
     if err != nil {
+        fmt.Println(err)
         os.Exit(1)
     }
     fmt.Println(db.Stats().OpenConnections)

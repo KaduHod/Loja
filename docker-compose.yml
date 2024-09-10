@@ -9,8 +9,6 @@ services:
     build:
       context: ./banco
       dockerfile: Dockerfile
-    volumes:
-      - ./banco/dumps/dump.sql:/docker-entrypoint-initdb.d/dump.sql
     restart: unless-stopped
     networks:
       - loja
