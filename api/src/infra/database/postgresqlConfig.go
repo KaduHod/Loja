@@ -25,4 +25,18 @@ func NewConnection() (*sql.DB, error) {
     return database, err
 }
 
-
+func Exists(table string, targetId int, db *sql.DB) (bool, error) {
+    query := fmt.Sprintf("SELECT id FROM %s WHERE id = %d LIMIT 1", table, targetId)
+    row := db.QueryRow(query)
+    if row.Err() != nil {
+        return false, row.Err()
+    }
+    var dummy int
+    if err := row.Scan(&dummy); err != nil {
+        if err.Error() == sql.ErrNoRows.Error() {
+            return false, nil
+        }
+        return false, err
+    }
+    return true, nil
+}
