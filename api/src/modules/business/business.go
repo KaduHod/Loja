@@ -140,7 +140,7 @@ func GetPersonBy[V any](filterColumn string, filterValue V, db *sql.DB) (Person,
     }
     return person, nil
 }
-func RelateBusinesToPersons(businessId int, ids []int, db *sql.DB) error {
+func RelateBusinessToPersons(businessId int, ids []int, db *sql.DB) error {
     var personsDb []Person
     var values []string
     business, err := GetBusinessBy[int]("id" ,businessId, db)

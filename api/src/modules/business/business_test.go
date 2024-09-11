@@ -14,6 +14,7 @@ var businessPersonIdsToDelete []int
 func TestMain(m *testing.M) {
     var err error
     db, err = database.NewConnection()
+    db.Exec("DELETE FROM businesses WHERE cnpj = '12345678912346'")
     defer db.Close()
     if err != nil {
         os.Exit(1)
@@ -102,7 +103,7 @@ func TestShouldNotGetPersonBy(t *testing.T) {
     }
 }
 func TestRelatePersonToBusiness(t *testing.T) {
-    err := RelateBusinesToPersons(1, []int{6}, db)
+    err := RelateBusinessToPersons(1, []int{6}, db)
     if err != nil {
         fmt.Println(err)
         t.Fail()
@@ -120,7 +121,7 @@ func TestRelatePersonToBusiness(t *testing.T) {
     businessPersonIdsToDelete = append(businessPersonIdsToDelete, id)
 }
 func TestRelatePersonToBusinessShouldNotSucced(t *testing.T) {
-    err := RelateBusinesToPersons(1, []int{0}, db)
+    err := RelateBusinessToPersons(1, []int{0}, db)
     if err == nil {
         t.Fail()
     }
