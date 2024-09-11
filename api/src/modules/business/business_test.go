@@ -10,6 +10,7 @@ import (
 var db *sql.DB
 var emailsToDelete []string
 var businessIdsToDelete []int
+var businessPersonIdsToDelete []int
 func TestMain(m *testing.M) {
     var err error
     db, err = database.NewConnection()
@@ -64,25 +65,103 @@ func TestCreateBusiness(t *testing.T) {
     }
     businessIdsToDelete = append(businessIdsToDelete, business.Id)
 }
+func TestGetBusinessBy(t *testing.T) {
+    _, err := GetBusinessBy[int]("id", 1, db)
+    if err != nil {
+        fmt.Println(err)
+        t.Fail()
+    }
+}
+func TestShouldNotGetBusinessBy(t *testing.T) {
+    _, err := GetBusinessBy[string]("cnpj", "00011122233344", db)
+    if err == nil {
+        fmt.Println(err)
+        t.Fail()
+    }
+    if err != sql.ErrNoRows {
+        fmt.Println(err)
+        t.Fail()
+    }
+}
+func TestGetPersonBy(t *testing.T) {
+    _, err := GetPersonBy[string]("email", "root@mail.com", db)
+    if err != nil {
+        fmt.Println(err)
+        t.Fail()
+    }
+}
+func TestShouldNotGetPersonBy(t *testing.T) {
+    _, err := GetPersonBy[string]("email", "root_@mail.com", db)
+    if err == nil {
+        fmt.Println(err)
+        t.Fail()
+    }
+    if err != sql.ErrNoRows {
+        fmt.Println(err)
+        t.Fail()
+    }
+}
+func TestRelatePersonToBusiness(t *testing.T) {
+    err := RelateBusinesToPersons(1, []int{6}, db)
+    if err != nil {
+        fmt.Println(err)
+        t.Fail()
+    }
+    row := db.QueryRow("SELECT id FROM user_businesses WHERE person_id = 6 AND business_id = 1 LIMIT 1")
+    if row.Err() != nil {
+        fmt.Println(row.Err().Error())
+        t.Fail()
+    }
+    var id int
+    if err := row.Scan(&id); err != nil {
+        fmt.Println(err)
+        t.Fail()
+    }
+    businessPersonIdsToDelete = append(businessPersonIdsToDelete, id)
+}
+func TestRelatePersonToBusinessShouldNotSucced(t *testing.T) {
+    err := RelateBusinesToPersons(1, []int{0}, db)
+    if err == nil {
+        t.Fail()
+    }
+    fmt.Println(err)
+}
 func postTests() {
+    var has_error bool
+    var errors []string
     for _, email := range emailsToDelete {
         person, err := GetPersonByEmail(email, db)
         if err != nil {
             fmt.Println(err)
+            errors = append(errors, err.Error())
             fmt.Println("Err trying to query email", email)
-            os.Exit(1)
+            has_error = true
         }
         if err := database.Delete("person", person.Id, db); err != nil {
+            errors = append(errors, err.Error())
             fmt.Println(err)
             fmt.Println("Err trying to DELETE email", email)
-            os.Exit(1)
+            has_error = true
         }
     }
     for _, id := range businessIdsToDelete {
         if err := database.Delete("businesses", id, db); err != nil {
+            errors = append(errors, err.Error())
             fmt.Println(err)
             fmt.Println("Err trying to DELETE business", id)
-            os.Exit(1)
+            has_error = true
         }
+    }
+    for _, id := range businessPersonIdsToDelete {
+        if err := database.Delete("user_businesses", id, db); err != nil {
+            errors = append(errors, err.Error())
+            fmt.Println(err)
+            fmt.Println("Err trying to DELETE bususer_businesses", id)
+            has_error = true
+        }
+    }
+    if has_error {
+        fmt.Println(errors)
+        os.Exit(1)
     }
 }

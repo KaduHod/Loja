@@ -29,7 +29,6 @@ func TestMain(m *testing.M) {
     // Sair com o código de saída dos testes
     os.Exit(exitCode)
 }
-
 func TestConnection(t *testing.T) {
     rows, err := db.Query("SELECT id, status, status_description FROM purchase_status;")
     if err != nil {
@@ -89,6 +88,47 @@ func TestDelete(t *testing.T) {
     }
     if err := Delete("person", id, db); err != nil {
         t.Log("Err while trying to delete value")
+        t.Fail()
+    }
+}
+type PurchaseStatus struct {
+    Id int `json:"id"`
+    Status string `json:"status"`
+    StatusDescription string `json:"status_description"`
+}
+func TestGetByShouldReturnValue(t *testing.T) {
+    row, err := GetBy[int](GetByConfig[int]{
+        Table: "purchase_status",
+        FilterColumn: "id",
+        FilterValue: 1,
+        ReturnColumns: []string{"id", "status", "status_description"},
+    }, db)
+    if err != nil {
+        fmt.Println(err)
+        t.Fail()
+    }
+    var status PurchaseStatus
+    if err := row.Scan(&status.Id, &status.Status, &status.StatusDescription); err != nil {
+        fmt.Println(err)
+        t.Fail()
+    }
+    fmt.Println("Status Purchase result", status)
+}
+func TestGetByShouldNotReturnValue(t *testing.T) {
+    row, err := GetBy[int](GetByConfig[int]{
+        Table: "purchase_status",
+        FilterColumn: "id",
+        FilterValue: 2987,
+        ReturnColumns: []string{"id", "status", "status_description"},
+    }, db)
+    if row.Err() != nil {
+        fmt.Println(err)
+        t.Fail()
+    }
+    var status PurchaseStatus
+    err = row.Scan(&status.Id, &status.Status, &status.StatusDescription)
+    if err != sql.ErrNoRows {
+        fmt.Println("Err, expected nil value")
         t.Fail()
     }
 }

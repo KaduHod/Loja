@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
@@ -72,4 +73,34 @@ func Exists(table string, targetId int, db *sql.DB) (bool, error) {
         return false, err
     }
     return true, nil
+}
+
+type GetByConfig[V any] struct {
+    Table string
+    FilterColumn string
+    FilterValue V
+    ReturnColumns []string
+}
+func GetBy[V any](config GetByConfig[V], db *sql.DB) (*sql.Row, error) {
+    if len(config.FilterColumn) == 0 {
+        return nil, errors.New("Filter column should get a value")
+    }
+    query := "SELECT"
+    if len(config.ReturnColumns) > 0 {
+        query += fmt.Sprintf(" %s", strings.Join(config.ReturnColumns, ", "))
+    } else {
+        query += " * "
+    }
+    query += fmt.Sprintf(" FROM %s ", config.Table)
+    var filterValue string
+    switch v := any(config.FilterValue).(type) {
+	case int:
+        filterValue = fmt.Sprintf("%s = %d", config.FilterColumn, v)
+	case string:
+        filterValue = fmt.Sprintf("%s = '%s'", config.FilterColumn, v)
+	default:
+        return nil, errors.New("Invalid type")
+	}
+    query += fmt.Sprintf(" WHERE %s LIMIT 1", filterValue)
+    return db.QueryRow(query), nil
 }

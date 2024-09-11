@@ -1,11 +1,13 @@
 package business
 
 import (
+	"api-loja/src/infra/database"
 	"api-loja/src/utils"
 	"database/sql"
 	"errors"
 	"fmt"
 	"net/mail"
+	"strings"
 )
 
 type Person struct {
@@ -18,7 +20,6 @@ type BusinessOwner struct {
     Name string `json:"name"`
     Email string `json:"email"`
 }
-
 func GetPersonByEmail(email string, db *sql.DB) (Person, error) {
     var person Person
     query := fmt.Sprintf("SELECT id, name, email FROM person WHERE email = '%s' LIMIT 1", email)
@@ -31,7 +32,6 @@ func GetPersonByEmail(email string, db *sql.DB) (Person, error) {
     }
     return person, nil
 }
-
 func CreateBusinessOwner(person BusinessOwner, db *sql.DB) (BusinessOwner, error) {
     var owner BusinessOwner
     tx, err := db.Begin()
@@ -110,4 +110,70 @@ func CreateBusiness(business Business, db *sql.DB) (Business, error) {
         return business, err
     }
     return business, nil
+}
+func GetBusinessBy[V any](filterColumn string, filterValue V, db *sql.DB) (Business, error) {
+    var business Business
+    config := database.GetByConfig[V]{
+        FilterColumn: filterColumn,
+        FilterValue: filterValue,
+        Table: "businesses",
+        ReturnColumns:  []string{"id", "name", "cnpj"},
+    }
+    row, err := database.GetBy[V](config, db)
+    if err != nil {
+        return business, err
+    }
+    if err := row.Scan(&business.Id, &business.Name, &business.Cnpj); err != nil {
+        return business, err
+    }
+    return business, nil
+}
+func GetPersonBy[V any](filterColumn string, filterValue V, db *sql.DB) (Person, error) {
+    var person Person
+    config := database.GetByConfig[V]{
+        FilterColumn: filterColumn,
+        FilterValue: filterValue,
+        Table: "person",
+        ReturnColumns:  []string{"id", "name", "email"},
+    }
+    row, err := database.GetBy[V](config, db)
+    if err != nil {
+        return person, err
+    }
+    if err := row.Scan(&person.Id, &person.Name, &person.Email); err != nil {
+        return person, err
+    }
+    return person, nil
+}
+func RelateBusinesToPersons(businessId int, ids []int, db *sql.DB) error {
+    var personsDb []Person
+    var values []string
+    business, err := GetBusinessBy[int]("id" ,businessId, db)
+    if err != nil {
+        return err
+    }
+    for _, id := range ids {
+        person, err := GetPersonBy[int]("id", id, db)
+        if err != nil {
+            return err
+        }
+        personsDb = append(personsDb, person)
+        values = append(values, fmt.Sprintf("(%d, %d)", person.Id, business.Id))
+    }
+    tx, err := db.Begin()
+    if err != nil {
+        return err
+    }
+    query := fmt.Sprintf("INSERT INTO user_businesses (person_id, business_id) VALUES %s", strings.Join(values, ","))
+    _, err = tx.Exec(query)
+    if err != nil {
+        if err := tx.Rollback(); err != nil {
+            return err
+        }
+        return err
+    }
+    if err := tx.Commit(); err != nil {
+        return err
+    }
+    return nil
 }
