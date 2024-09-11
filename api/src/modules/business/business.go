@@ -15,11 +15,6 @@ type Person struct {
     Name string `json:"name"`
     Email string `json:"email"`
 }
-type BusinessOwner struct {
-    Id int `json:"id"`
-    Name string `json:"name"`
-    Email string `json:"email"`
-}
 func GetPersonByEmail(email string, db *sql.DB) (Person, error) {
     var person Person
     query := fmt.Sprintf("SELECT id, name, email FROM person WHERE email = '%s' LIMIT 1", email)
@@ -32,8 +27,8 @@ func GetPersonByEmail(email string, db *sql.DB) (Person, error) {
     }
     return person, nil
 }
-func CreateBusinessOwner(person BusinessOwner, db *sql.DB) (BusinessOwner, error) {
-    var owner BusinessOwner
+func CreatePerson(person Person, db *sql.DB) (Person, error) {
+    var owner Person
     tx, err := db.Begin()
     if err != nil {
         return owner, err

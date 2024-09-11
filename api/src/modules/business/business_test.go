@@ -31,7 +31,7 @@ func TestGetPersonByEmail(t *testing.T) {
     }
 }
 func TestCreateBusinessOwner(t *testing.T) {
-    owner, err := CreateBusinessOwner(BusinessOwner{
+    owner, err := CreatePerson(Person{
         Name: "TEST__ user ",
         Email: "teste@mail.com",
     }, db)
