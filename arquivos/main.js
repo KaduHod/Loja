@@ -30,10 +30,23 @@ const storage = multer.diskStorage({
         cb(null, fileName)
     }
 })
+const authMiddleware = async (req, res, next) => {
+    const token = req.headers.token
+    const request = await fetch("http://loja-auth/verify-token", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({token})
+    })
+    if(request.status != 200) {
+        return res.sendStatus(401)
+    }
+    next()
+}
 const upload = multer({storage})
 const main = async () => {
     const server = express()
     server.use(express.json())
+    server.use("/", authMiddleware)
     server.get('/ping', (req, res) => {
         res.send("ping-pong")
     })
