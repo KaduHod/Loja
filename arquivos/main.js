@@ -40,13 +40,13 @@ const main = async () => {
     server.post('/files/upload', upload.single('file'), async (req, res) => {
         try {
             const file = req.file
-            const {category, id } = req.query
+            const {category, id} = req.query
             const validCategorys = ["business", "product", "store", "person"]
             if(!category || !id || !validCategorys.includes(category)) {
-                return res.send(404)
+                return res.send(400)
             }
             const fileName = `${file.originalname}`
-            const file_dest = `${category}/${fileName}`
+            const file_dest = `${fileName}`
             await fs.copyFile("/tmp/" + fileName, "/app/storage/" + file_dest)
             await fs.unlink("/tmp/" + fileName)
             const insertConfig = { file_name: file_dest }
@@ -101,9 +101,6 @@ const main = async () => {
         WHERE f.id = ?`
         const categoryId = FILE_CATEGORYS[category.toUpperCase()]
         const entityTable = ENTITYS_TABLE[category.toUpperCase()]
-        console.log(query, [
-            categoryId, entityTable, entityid, fileid
-        ])
         const result = await db.raw(query, [
             categoryId, entityTable, entityid, fileid
         ])
@@ -113,7 +110,6 @@ const main = async () => {
         const file_path = `/app/storage/${result.rows[0].file_name}`;
         res.setHeader('Content-Type', 'application/octet-stream')
         createReadStream(file_path).pipe(res)
-        //res.sendStatus(200)
     })
     server.listen(process.env.API_PORTA, () => console.log("File service running on " + process.env.API_PORTA))
 }
