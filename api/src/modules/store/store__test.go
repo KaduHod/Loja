@@ -51,3 +51,27 @@ func TestGetStoreBy(t *testing.T) {
         t.Fail()
     }
 }
+func TestCreateStoreProduct(t *testing.T) {
+    _, err := CreateStoreProduct(Store{
+        Id: 1,
+    }, Product{
+        Name: "TEST",
+        Description: "TEST",
+    }, db)
+    if err != nil {
+        fmt.Println(err)
+        t.Fail()
+    }
+}
+func TestCreateStoreWithInvalidStore(t *testing.T) {
+    _, err := CreateStoreProduct(Store{
+        Id: 99999,
+    }, Product{
+        Name: "TEST",
+        Description: "TEST",
+    }, db)
+    if err == nil {
+        fmt.Println(err)
+        t.Fail()
+    }
+}
