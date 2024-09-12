@@ -46,7 +46,7 @@ func TestCreateBusinessOwner(t *testing.T) {
     }
     emailsToDelete = append(emailsToDelete, "teste@mail.com")
 }
-func TestGetBusiness(t *testing.T) {
+func TestGetBusinessByCnpj(t *testing.T) {
     _, err := GetBusinessByCnpj("12345678912345", db)
     if err != nil {
         fmt.Println(err)

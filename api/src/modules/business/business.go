@@ -70,7 +70,7 @@ type Business struct {
 }
 func GetBusinessByCnpj(cnpj string, db *sql.DB) (Business, error) {
     var business Business
-    row := db.QueryRow("SELECT id, name, cnpj FROM businesses WHERE cnpj = '$1' LIMIT 1", cnpj)
+    row := db.QueryRow("SELECT id, name, cnpj FROM businesses WHERE cnpj = $1 LIMIT 1", cnpj)
     if row.Err() != nil {
         return business, row.Err()
     }
@@ -88,7 +88,7 @@ func CreateBusiness(business Business, db *sql.DB) (Business, error) {
     if err != nil {
         return business, err
     }
-    _, err = tx.Exec("INSERT INTO businesses (name, cnpj) VALUES ('$1', '$2')",  business.Name, business.Cnpj)
+    _, err = tx.Exec("INSERT INTO businesses (name, cnpj) VALUES ($1, $2)",  business.Name, business.Cnpj)
     if err != nil {
         if err := tx.Rollback(); err != nil {
             return business, err
