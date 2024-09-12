@@ -1,5 +1,6 @@
 *.env
 *go.sum
 *node_modules
-*package-lock.json
+*package-lock*
 *server.log
+arquivos/storage/*
