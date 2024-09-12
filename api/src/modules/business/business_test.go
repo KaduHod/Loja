@@ -125,7 +125,6 @@ func TestRelatePersonToBusinessShouldNotSucced(t *testing.T) {
     if err == nil {
         t.Fail()
     }
-    fmt.Println(err)
 }
 func postTests() {
     var has_error bool

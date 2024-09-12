@@ -70,8 +70,7 @@ type Business struct {
 }
 func GetBusinessByCnpj(cnpj string, db *sql.DB) (Business, error) {
     var business Business
-    query := fmt.Sprintf("SELECT id, name, cnpj FROM businesses WHERE cnpj = '%s' LIMIT 1", cnpj)
-    row := db.QueryRow(query)
+    row := db.QueryRow("SELECT id, name, cnpj FROM businesses WHERE cnpj = '$1' LIMIT 1", cnpj)
     if row.Err() != nil {
         return business, row.Err()
     }
@@ -85,12 +84,11 @@ func CreateBusiness(business Business, db *sql.DB) (Business, error) {
     if len(business.Cnpj) < 14 {
         return business, errors.New("Cnpj invalid")
     }
-    insertQuery := fmt.Sprintf("INSERT INTO businesses (name, cnpj) VALUES ('%s', '%s')", business.Name, business.Cnpj)
     tx, err := db.Begin()
     if err != nil {
         return business, err
     }
-    _, err = tx.Exec(insertQuery)
+    _, err = tx.Exec("INSERT INTO businesses (name, cnpj) VALUES ('$1', '$2')",  business.Name, business.Cnpj)
     if err != nil {
         if err := tx.Rollback(); err != nil {
             return business, err
@@ -147,20 +145,29 @@ func RelateBusinessToPersons(businessId int, ids []int, db *sql.DB) error {
     if err != nil {
         return err
     }
+    var argsAux [][]int
+    var args []interface{}
     for _, id := range ids {
         person, err := GetPersonBy[int]("id", id, db)
         if err != nil {
             return err
         }
         personsDb = append(personsDb, person)
-        values = append(values, fmt.Sprintf("(%d, %d)", person.Id, business.Id))
+        argsAux = append(argsAux, []int{person.Id, business.Id})
+        args = append(args, person.Id)
+        args = append(args, business.Id)
+    }
+    for i := range argsAux {
+        first := i + 1
+        second := first + 1
+        values = append(values, fmt.Sprintf("($%d, $%d)", first, second))
     }
     tx, err := db.Begin()
     if err != nil {
         return err
     }
     query := fmt.Sprintf("INSERT INTO user_businesses (person_id, business_id) VALUES %s", strings.Join(values, ","))
-    _, err = tx.Exec(query)
+    _, err = tx.Exec(query, args...)
     if err != nil {
         if err := tx.Rollback(); err != nil {
             return err
